@@ -22,5 +22,20 @@ pipeline {
                sh "mvn test"
            }
        }
+       stage('Code Quality') {
+           steps {
+               echo 'Code Quality'
+           }
+       }
+       stage('Upload Artifacts') {
+           steps {
+               echo 'Upload Artifacts'
+           }
+       }
+       stage('Deploy') {
+           steps {
+               echo 'Deploy'
+           }
+       }
     }
 }
