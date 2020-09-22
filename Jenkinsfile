@@ -10,7 +10,7 @@ pipeline {
                 sh "mvn -Dmaven.test.failure.ignore=true clean package"
                 
             }
-            post {
+           post {
                 success {
                     junit '**/target/surefire-reports/TEST-*.xml'
                     archiveArtifacts 'target/*.jar'
@@ -24,13 +24,19 @@ pipeline {
        }
        stage('Code Quality') {
            steps {
-               echo 'Code Quality'
+               sh "mvn checkstyle:checkstyle pmd:pmd pmd:cpd findbugs:findbugs"
+           }
+           post {
+               always {
+                   recordIssues enabledForFailure: true, tools: [mavenConsole(), java(), javaDoc()]
+                   recordIssues enabledForFailure: true, tool: checkStyle()
+                   recordIssues enabledForFailure: true, tool: cpd(pattern: '**/target/cpd.xml')
+                   recordIssues enabledForFailure: true, tool: pmdParser(pattern: '**/target/pmd.xml')
+               }
            }
        }
-        stage ('Artifactory configuration') {
+       stage ('Artifactory configuration') {
             steps {
-               
-
                 rtMavenDeployer (
                     id: "MAVEN_DEPLOYER",
                     serverId: "artifactory-server",
@@ -46,19 +52,17 @@ pipeline {
                 )
             }
         }
-
+        
         stage ('Exec Maven') {
             steps {
                 rtMavenRun (
-                    tool: M2_HOME, // Tool name from Jenkins configuration
-                    pom: 'java-project/pom.xml',
+                    pom: 'pom.xml',
                     goals: 'clean install package',
                     deployerId: "MAVEN_DEPLOYER",
                     resolverId: "MAVEN_RESOLVER"
                 )
             }
         }
-
         stage ('Publish build info') {
             steps {
                 rtPublishBuildInfo (
@@ -66,15 +70,7 @@ pipeline {
                 )
             }
         }
-       stage('Upload Artifacts') {
-           steps {
-               echo 'Upload Artifacts'
-           }
-       }
-       stage('Deploy') {
-           steps {
-               echo 'Deploy'
-           }
-       }
     }
 }
+                   
+
