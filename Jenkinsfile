@@ -8,7 +8,6 @@ pipeline {
             steps {
                 git 'https://github.com/Valiveti-Neelima/java-project.git'
                 sh "mvn -Dmaven.test.failure.ignore=true clean package"
-                
             }
            post {
                 success {
@@ -17,12 +16,17 @@ pipeline {
                 }
             }
         }
-       stage('Test') {
+        stage('Test') {
            steps {
                sh "mvn test"
            }
-       }
-       stage('Code Quality') {
+        }
+        stage('sonarQube') {
+            steps {
+                sh "mvn sonar:sonar"
+            }
+        }
+        stage('Code Quality') {
            steps {
                sh "mvn checkstyle:checkstyle pmd:pmd pmd:cpd findbugs:findbugs"
            }
